@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { motion } from 'motion/react'
 import { Mail, Phone, MapPin, Send, Linkedin, Github } from 'lucide-react'
 
+const recipientEmail = 'amolshinde3259@gmail.com'
+
 const contactInfo = [
-  { icon: Mail, label: 'Email', value: 'amolshinde3259@gmail.com', href: 'mailto:amolshinde3259@gmail.com' },
+  { icon: Mail, label: 'Email', value: recipientEmail, href: `mailto:${recipientEmail}` },
   { icon: Phone, label: 'Phone', value: '+91 7517979840', href: 'tel:+917517979840' },
   { icon: MapPin, label: 'Location', value: 'Pune – 411052, Maharashtra', href: null },
   { icon: Linkedin, label: 'LinkedIn', value: 'linkedin.com/in/amol-shinde', href: 'https://www.linkedin.com/in/amol-shinde' },
@@ -14,11 +16,42 @@ export function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
     setSending(true)
-    setTimeout(() => { setSending(false); setSent(true) }, 1500)
+
+    try {
+      const response = await fetch(`https://formsubmit.co/ajax/${recipientEmail}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          _replyto: form.email,
+          subject: form.subject || 'Portfolio contact form message',
+          message: form.message,
+          _subject: form.subject || 'New message from portfolio',
+          _template: 'table',
+          _captcha: 'false',
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Message could not be sent.')
+      }
+
+      setSent(true)
+    } catch {
+      setError('Message could not be sent right now. Please email me directly.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -88,7 +121,7 @@ export function Contact() {
                 <p style={{ color: 'var(--text-muted)' }}>Thanks for reaching out. I'll get back to you soon!</p>
                 <motion.button
                   whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                  onClick={() => { setSent(false); setForm({ name: '', email: '', subject: '', message: '' }) }}
+                  onClick={() => { setSent(false); setError(''); setForm({ name: '', email: '', subject: '', message: '' }) }}
                   className="btn-secondary"
                   style={{ marginTop: '0.5rem' }}
                 >
@@ -96,7 +129,7 @@ export function Contact() {
                 </motion.button>
               </motion.div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
                 {[
                   { id: 'name', label: 'Your Name', type: 'text', placeholder: 'John Doe' },
                   { id: 'email', label: 'Your Email', type: 'email', placeholder: 'john@example.com' },
@@ -105,6 +138,7 @@ export function Contact() {
                   <div key={id}>
                     <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>{label}</label>
                     <input
+                      name={id}
                       type={type}
                       value={form[id]}
                       onChange={(e) => setForm({ ...form, [id]: e.target.value })}
@@ -126,6 +160,7 @@ export function Contact() {
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Message</label>
                   <textarea
+                    name="message"
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
                     rows={5}
@@ -144,7 +179,7 @@ export function Contact() {
                   />
                 </div>
                 <motion.button
-                  onClick={handleSubmit}
+                  type="submit"
                   disabled={sending}
                   whileHover={{ scale: 1.02, boxShadow: '0 0 30px rgba(168,85,247,0.4)' }}
                   whileTap={{ scale: 0.97 }}
@@ -157,7 +192,15 @@ export function Contact() {
                     />
                   ) : <><Send size={18} /> Send Message</>}
                 </motion.button>
-              </div>
+                {error && (
+                  <p style={{ color: '#fca5a5', fontSize: '0.85rem', textAlign: 'center' }}>
+                    {error}{' '}
+                    <a href={`mailto:${recipientEmail}`} style={{ color: '#f0abfc', fontWeight: 600 }}>
+                      {recipientEmail}
+                    </a>
+                  </p>
+                )}
+              </form>
             )}
           </motion.div>
         </div>

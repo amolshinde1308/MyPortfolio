@@ -13,7 +13,6 @@ import { InteractiveBackground } from './components/InteractiveBackground'
 import { TechStack } from './components/TechStack'
 import { Stats } from './components/Stats'
 import { ThemeProvider } from './components/ThemeContext'
-import { WelcomeOverlay } from './components/WelcomeOverlay'
 
 export default function App() {
   // Smooth scroll for hash links
@@ -33,7 +32,6 @@ export default function App() {
   return (
     <ThemeProvider>
       <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', overflowX: 'hidden', transition: 'background 0.35s ease, color 0.35s ease' }}>
-      <WelcomeOverlay />
       <InteractiveBackground />
       <CustomCursor />
 
