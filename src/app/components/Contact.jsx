@@ -4,6 +4,21 @@ import { Mail, Phone, MapPin, Send, Linkedin, Github } from 'lucide-react'
 
 const recipientEmail = 'amolshinde3259@gmail.com'
 
+const buildEmailPayload = ({ name, email, subject, message }) => {
+  const safeSubject = subject.trim() || 'Portfolio contact form message'
+
+  return new URLSearchParams({
+    name: name.trim(),
+    email: email.trim(),
+    _replyto: email.trim(),
+    subject: safeSubject,
+    message: message.trim(),
+    _subject: safeSubject,
+    _template: 'table',
+    _captcha: 'false',
+  })
+}
+
 const contactInfo = [
   { icon: Mail, label: 'Email', value: recipientEmail, href: `mailto:${recipientEmail}` },
   { icon: Phone, label: 'Phone', value: '+91 7517979840', href: 'tel:+917517979840' },
@@ -27,22 +42,15 @@ export function Contact() {
       const response = await fetch(`https://formsubmit.co/ajax/${recipientEmail}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
           Accept: 'application/json',
         },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          _replyto: form.email,
-          subject: form.subject || 'Portfolio contact form message',
-          message: form.message,
-          _subject: form.subject || 'New message from portfolio',
-          _template: 'table',
-          _captcha: 'false',
-        }),
+        body: buildEmailPayload(form),
       })
 
-      if (!response.ok) {
+      const result = await response.json().catch(() => null)
+
+      if (!response.ok || result?.success === false || result?.success === 'false') {
         throw new Error('Message could not be sent.')
       }
 
